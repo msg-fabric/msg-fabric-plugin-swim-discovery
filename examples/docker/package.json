@@ -8,13 +8,15 @@
   },
   "scripts": {
     "start": "npm -s run dkr_init_network && npm -s run dkr_init_registry",
-    "stop": "npm -s run dkr_rm_network && npm -s run dkr_rm_registry",
+    "stop": "npm -s run dkr_rm_services && npm -s run dkr_rm_registry && npm -s run dkr_rm_network",
 
     "dkr_init_registry": "docker service create --name $npm_package_docker_registry_name --publish $npm_package_docker_registry_port:5000 --detach=false registry:latest || true",
     "dkr_rm_registry": "docker service rm $npm_package_docker_registry_name || true",
 
     "dkr_init_network": "docker network create $npm_package_docker_network --driver overlay --opt encrypted --attachable || true",
-    "dkr_rm_network": "docker network rm $npm_package_docker_network || true"
+    "dkr_rm_network": "docker network rm $npm_package_docker_network || true",
+
+    "dkr_rm_services": "docker service rm swim_core ; docker service rm swim_service_one ; docker service rm swim_service_two ; true"
   }
 }
 

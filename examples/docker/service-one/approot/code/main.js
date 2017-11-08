@@ -1,10 +1,8 @@
 require('source-map-support').install()
-const MessageHub = require('packet-stream/dist')
-const basic_router_plugin = require('packet-stream/dist/plugins/basic_router')
-const tcp_plugin = require('packet-stream/dist/plugins/tcp')
-const swim_plugin = require('packet-stream/dist/plugins/swim_discovery')
+const MessageHub = require('msg-fabric')
+const swim_plugin = require('msg-fabric-plugin-swim-discovery')
 
-const Hub = MessageHub.plugin( basic_router_plugin(), tcp_plugin(), swim_plugin() )
+const Hub = MessageHub.plugin( swim_plugin() )
 
 const demo_utils = require('./demo_utils')
 
@@ -12,8 +10,8 @@ async function main_service_one() {
   const hub = new Hub()
 
   hub.router.registerTarget(0, (msg, router) => {
-    const header = JSON.parse(msg.sliceHeader().toString() || 'null')
-    const body = JSON.parse(msg.sliceBody().toString() || 'null')
+    const header = msg.header_json()
+    const body = msg.body_json()
     console.log('SERVICE ONE got message!', {header, body})
   })
 
