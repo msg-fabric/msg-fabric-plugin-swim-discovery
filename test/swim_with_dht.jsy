@@ -1,16 +1,11 @@
 require('source-map-support').install()
 import HashRing from 'hashring'
-
-import MessageHub from '../dist'
-import ec_router from '../dist/plugins/ec_router'
-import tcp_plugin from '../dist/plugins/tcp'
-import swim_plugin from '../dist/plugins/swim_discovery'
-
+import MessageHub from 'msg-fabric'
+import swim_plugin from '../dist/swim_discovery'
 
 const Hub = MessageHub.plugin @
-  ec_router()
-  tcp_plugin()
   swim_plugin()
+
 
 async function main_swim_core(swim_port, meta) ::
   const hub = new Hub()
@@ -30,7 +25,7 @@ async function main_swim_core(swim_port, meta) ::
 async function main_swim_service(swim_port, ctx, meta) ::
   const hub = new Hub()
   hub.router.registerTarget @ 0, (msg, router) => ::
-    const body = msg.sliceBody().toString()
+    const body = msg.body_json()
     console.log @ `SVC "${meta.topics[0]}" message:`, body
 
   const svr = hub.tcp.createServer()

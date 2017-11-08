@@ -1,22 +1,16 @@
 require('source-map-support').install()
-import MessageHub from '../dist'
-import ec_router from '../dist/plugins/ec_router'
-import tcp_plugin from '../dist/plugins/tcp'
-import swim_plugin from '../dist/plugins/swim_discovery'
-
+import MessageHub from 'msg-fabric'
+import swim_plugin from '../dist/swim_discovery'
 
 const Hub = MessageHub.plugin @
-  ec_router()
-  tcp_plugin()
   swim_plugin()
-
 
 
 async function main_swim_core(swim_port, meta) ::
   const hub = new Hub()
   hub.router.registerTarget @ 0, (msg, router) => ::
-    const header = JSON.parse @ msg.sliceHeader().toString() || 'null'
-    const body = JSON.parse @ msg.sliceBody().toString() || 'null'
+    const header = msg.header_json()
+    const body = msg.body_json()
     console.log @ 'CORE got message!', {header, body}, meta
 
   const svr = hub.tcp.createServer()
@@ -35,8 +29,8 @@ async function main_swim_core(swim_port, meta) ::
 async function main_swim_service(swim_port, ctx, meta) ::
   const hub = new Hub()
   hub.router.registerTarget @ 0, (msg, router) => ::
-    const header = JSON.parse @ msg.sliceHeader().toString() || 'null'
-    const body = JSON.parse @ msg.sliceBody().toString() || 'null'
+    const header = msg.header_json()
+    const body = msg.body_json()
     console.log @ 'SVC got message!', {header, body}, meta
 
   const svr = hub.tcp.createServer()
