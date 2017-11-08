@@ -1,0 +1,56 @@
+{
+  "name": "msg-fabric-plugin-swim-discovery",
+  "version": "0.1.0",
+  "description": "SWIM Discovery for msg-fabric",
+  "license": "BSD-2-Clause",
+  "author": "Shane Holloway <shane.holloway@ieee.org>",
+  "homepage": "https://github.com/shanewholloway/msg-fabric-plugin-swim-discovery#readme",
+  "bugs": {
+    "url": "https://github.com/shanewholloway/msg-fabric-plugin-swim-discovery/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/shanewholloway/msg-fabric-plugin-swim-discovery.git"
+  },
+  "keywords": [
+    "ecosystem:msg-fabric",
+    "distributed live object",
+    "message-passing",
+    "distributed object",
+    "distributed",
+    "actors",
+    "message",
+    "passing",
+    "SWIM",
+    "discovery",
+    "gossip"
+  ],
+  "files": [
+    "dist/",
+    "code/",
+    "test/"
+  ],
+  "main": "dist/swim_discovery",
+  "module": "dist/swim_discovery.mjs",
+  "dependencies": {
+    "swim": "^0.3.2"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-jsy": "^0.9.2",
+    "hashring": "^3.2.0",
+    "rollup": "^0.50.0",
+    "rollup-plugin-babel": "^3.0.2"
+  },
+  "babel": {
+    "presets": "jsy/lean"
+  },
+  "scripts": {
+    "build": "rollup --config",
+    "watch": "npm -s run build -- --watch",
+    "demo:swim": "babel-node test/swim.jsy",
+    "demo:dht": "babel-node test/swim_with_dht.jsy",
+    "pretest": "npm -s run build",
+    "test": "true"
+  }
+}
