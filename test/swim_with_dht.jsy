@@ -1,9 +1,9 @@
 require('source-map-support').install()
 import HashRing from 'hashring'
-import MessageHub from 'msg-fabric'
+import FabricHub from 'msg-fabric-core/node'
 import swim_plugin from '../dist/swim_discovery'
 
-const Hub = MessageHub.plugin @
+const Hub = FabricHub.plugin @
   swim_plugin()
 
 

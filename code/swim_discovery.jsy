@@ -117,7 +117,7 @@ class SwimDiscovery ::
       const chan = await hub.connect @ entry.channel
       return chan.sendRaw
 
-    hub.router._routeDiscovery.push @ resolveRouterId
+    hub.router.routeDiscovery.push @ resolveRouterId
     return this
 
 

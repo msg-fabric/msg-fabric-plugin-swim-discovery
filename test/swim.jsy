@@ -1,13 +1,14 @@
 require('source-map-support').install()
-import MessageHub from 'msg-fabric'
+import FabricHub from 'msg-fabric-core/node'
 import swim_plugin from '../dist/swim_discovery'
 
-const Hub = MessageHub.plugin @
+const Hub = FabricHub.plugin @
   swim_plugin()
 
 
 async function main_swim_core(swim_port, meta) ::
   const hub = new Hub()
+  console.log @ hub
   hub.router.registerTarget @ 0, (msg, router) => ::
     const header = msg.header_json()
     const body = msg.body_json()
