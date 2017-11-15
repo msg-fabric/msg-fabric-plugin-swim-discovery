@@ -74,8 +74,6 @@ function main_demo({hub, swimDisco}) ::
   const channel = hub.connect_self()
   setInterval @ pingOneAtRandom, 1000
 
-  function lookup(addr) ::
-    return 
   function pingOneAtRandom() ::
     const idx = 0 | @ Math.random() * manyKeys.length
     const key = manyKeys[idx]
