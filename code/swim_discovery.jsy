@@ -1,6 +1,8 @@
 import {resolve as dns_resolve} from 'dns'
 import SWIM from 'swim'
 
+const ts_2015_epoch = 1420070400000 // new Date('2015-01-01T00:00:00.000Z').valueOf()
+
 swim_plugin.default_options = @{}
   swim_port: 2700
   swim_config: @{}
@@ -25,7 +27,7 @@ export default function swim_plugin(plugin_options) ::
 
       return Object.assign @ {}, meta, ...args, id_info
 
-    function createSWIM({host, meta, channel, swim_port}) ::
+    function createSWIM({host, meta, channel, swim_port, incarnation}) ::
       let conn_info = 'function' === typeof channel 
         ? channel : channel.conn_info
       if conn_info ::
@@ -33,15 +35,18 @@ export default function swim_plugin(plugin_options) ::
         channel = (ip_server || ip_local).asURL()
         if ! host ::
           if ! swim_port :: swim_port = plugin_options.swim_port
-          host = `${(ip_server || ip_local).address}:${swim_port}:${hub.id_self}`
+          host = `${(ip_server || ip_local).address}:${swim_port}`
 
       if ! host ::
         throw new Error @ `SWIM package requires a valid "host" parameter`
+      if null == incarnation ::
+        // use a rough time-based incarnation to help with reusing ip/port
+        incarnation = Date.now() - ts_2015_epoch
 
       meta = assignSWIMMeta @ meta, channel && @{} channel
       const swim_opts = Object.assign @
         {}, plugin_options.swim_config
-        @: local: @{} host, meta
+        @: local: @{} host, meta, incarnation
 
       const swim = new SWIM @ swim_opts
       return new swim_plugin.SwimDiscovery @ hub, swim
