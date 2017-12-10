@@ -33,7 +33,7 @@ export default function swim_plugin(plugin_options) ::
         channel = (ip_server || ip_local).asURL()
         if ! host ::
           if ! swim_port :: swim_port = plugin_options.swim_port
-          host = `${(ip_server || ip_local).address}:${swim_port}`
+          host = `${(ip_server || ip_local).address}:${swim_port}:${hub.id_self}`
 
       if ! host ::
         throw new Error @ `SWIM package requires a valid "host" parameter`
@@ -70,7 +70,8 @@ class SwimDiscovery ::
 
     else if Array.isArray @ swim_hosts ::
       if swim_port ::
-        swim_hosts = swim_hosts.map @ host => `${host}:${swim_port}`
+        swim_hosts = swim_hosts.map @ host =>
+          host.includes(':') ? host : `${host}:${swim_port}`
       swim.bootstrap @ swim_hosts
       return this
 
@@ -114,8 +115,13 @@ class SwimDiscovery ::
       const entry = this.byId.get(id_router)
       if undefined === entry :: return
 
-      const chan = await hub.connect @ entry.channel
-      return chan.sendRaw
+      try ::
+        const chan = await hub.connect @ entry.channel
+        return chan.sendRaw
+      catch err ::
+        this.byId.delete(id_router)
+        if err && 'ECONNREFUSED' !== err.code ::
+          throw err // re-throw if not recognized
 
     hub.router.routeDiscovery.push @ resolveRouterId
     return this
