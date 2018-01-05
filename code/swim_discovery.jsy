@@ -66,21 +66,39 @@ class SwimDiscovery ::
   localhost() :: return this.swim.localhost()
 
   bootstrap(swim_hosts=[], swim_port) ::
-    const swim = this.swim
-    if 'string' === typeof swim_hosts ::
-      dns_resolve @ swim_hosts, (err, hosts) => ::
-        swim_hosts = hosts.map @ host => `${host}:${swim_port}`
-        swim.bootstrap @ swim_hosts
-      return this
+    return this._perform_with_swim_hosts @ swim_hosts, swim_port
+      (swim, swim_hosts, callback) => swim.bootstrap(swim_hosts, callback)
 
-    else if Array.isArray @ swim_hosts ::
-      if swim_port ::
-        swim_hosts = swim_hosts.map @ host =>
-          host.includes(':') ? host : `${host}:${swim_port}`
-      swim.bootstrap @ swim_hosts
-      return this
+  join(swim_hosts=[], swim_port) ::
+    return this._perform_with_swim_hosts @ swim_hosts, swim_port
+      (swim, swim_hosts, callback) => swim.join(swim_hosts, callback)
 
-    throw new TypeError @ `Unexpected 'swim_hosts' parameter format.`
+  _perform_with_swim_hosts(swim_hosts, swim_port, callback) ::
+    return new Promise @ (resolve, reject) => ::
+      try ::
+        const swim = this.swim
+        if 'string' === typeof swim_hosts ::
+          if ! swim_port ::
+            throw new TypeError @ `'swim_port' must be provided when boostrapping using DNS`
+
+          dns_resolve @ swim_hosts, (err, hosts) => ::
+            if err :: return reject(err)
+            if hosts ::
+              swim_hosts = hosts.map @ host => `${host}:${swim_port}`
+              callback @ swim, swim_hosts, (err, ans) =>
+                err ? reject(err) : resolve(ans)
+          return this
+
+        else if Array.isArray @ swim_hosts ::
+          if swim_port ::
+            swim_hosts = swim_hosts.map @ host =>
+              host.includes(':') ? host : `${host}:${swim_port}`
+          callback @ swim, swim_hosts, (err, ans) =>
+            err ? reject(err) : resolve(ans)
+          return this
+
+        throw new TypeError @ `Unexpected 'swim_hosts' parameter format.`
+      catch err :: reject(err)
 
 
   _bindSwimUpdates(swim, byId) ::
