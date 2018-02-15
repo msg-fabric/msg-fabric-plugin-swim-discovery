@@ -1,1 +1,5 @@
 copied_packages
+dist/
+esm/
+cjs/
+umd/

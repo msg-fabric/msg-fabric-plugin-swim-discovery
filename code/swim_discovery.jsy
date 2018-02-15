@@ -18,35 +18,22 @@ export default function swim_plugin(plugin_options) ::
   return function (hub) ::
     hub.createSWIM = createSWIM
 
-    function assignSWIMMeta(meta, ...args) ::
-      const {id_self: id_router, ec_pub_id} = hub.router
-      const id_info = ec_pub_id 
-        ? @{} id_router
-              ec_pub_id: ec_pub_id.toString('base64')
-        : @{} id_router
+    function assignSWIMMeta(meta) ::
+      const {id_route} = hub.local
+      return Object.assign @ {id_route}, meta
 
-      return Object.assign @ {}, meta, ...args, id_info
+    function createSWIM({host, meta, url, incarnation}) ::
+      if ! host :: throw new Error @ `SWIM package requires a valid "host" parameter`
 
-    function createSWIM({host, meta, channel, swim_port, incarnation}) ::
-      let conn_info = 'function' === typeof channel 
-        ? channel : channel.conn_info
-      if conn_info ::
-        const {ip_server, ip_local} = conn_info()
-        channel = (ip_server || ip_local).asURL()
-        if ! host ::
-          if ! swim_port :: swim_port = plugin_options.swim_port
-          host = `${(ip_server || ip_local).address}:${swim_port}`
-
-      if ! host ::
-        throw new Error @ `SWIM package requires a valid "host" parameter`
       if null == incarnation ::
         // use a rough time-based incarnation to help with reusing ip/port
         incarnation = Date.now() - ts_2015_epoch
 
-      meta = assignSWIMMeta @ meta, channel && @{} channel
-      const swim_opts = Object.assign @
-        {}, plugin_options.swim_config
-        @: local: @{} host, meta, incarnation
+      meta = Object.assign @ {url, id_route: hub.local.id_route}, meta
+
+      const swim_opts = Object.assign @ {}
+        plugin_options.swim_config
+        @{} local: @{} host, meta, incarnation
 
       const swim = new SWIM @ swim_opts
       return new swim_plugin.SwimDiscovery @ hub, swim
@@ -121,28 +108,28 @@ class SwimDiscovery ::
         _on_updateEntry @ evt.meta, swim_state_lut[evt.state], evt.host
 
     function _on_updateEntry(meta, swim_state, swim_host) ::
-      const {id_router, ec_pub_id} = meta
-      const cur = byId.get(id_router)
+      const {id_route, ec_pub_id} = meta
+      const cur = byId.get(id_route)
       if undefined !== cur && ec_pub_id != cur.ec_pub_id ::
         return // refuse to override existing entries with mismatched ec_pub_id
 
       const entry = Object.assign @ {}, meta, @{} swim_state, swim_host, swim_ts: new Date()
-      byId.set @ id_router, entry
+      byId.set @ id_route, entry
       pqueue().updates.push @ entry
 
 
   registerRouterDiscovery(hub) ::
     if null == hub :: hub = this.hub
 
-    const resolveRouterId = async id_router => ::
-      const entry = this.byId.get(id_router)
+    const resolveRouterId = query => ::
+      const entry = this.byId.get(query.id_route)
       if undefined === entry :: return
+      if ! entry.url :: return
 
       try ::
-        const chan = await hub.connect @ entry.channel
-        return chan.sendRaw
+        return hub.connect @ entry.url
       catch err ::
-        this.byId.delete(id_router)
+        this.byId.delete(query.id_route)
         if err && 'ECONNREFUSED' !== err.code ::
           throw err // re-throw if not recognized
 

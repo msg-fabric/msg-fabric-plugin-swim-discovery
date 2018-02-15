@@ -1,27 +1,14 @@
-import rpi_babel from 'rollup-plugin-babel'
+import pkg from './package.json'
+import rpi_jsy from 'rollup-plugin-jsy-babel'
 
 const sourcemap = 'inline'
-
 const external = ['swim', 'dns']
+const plugins = [rpi_jsy()]
 
-const plugins = [jsy_plugin()]
-
-export default [
+export default 
 	{ input: 'code/swim_discovery.jsy',
 		output: [
-      { file: `dist/swim_discovery.js`, format: 'cjs' },
-      { file: `dist/swim_discovery.mjs`, format: 'es' },
+      { file: pkg.main, format: 'cjs', sourcemap },
+      { file: pkg.module, format: 'es', sourcemap },
     ],
-    sourcemap, external, plugins },
-]
-
-
-
-
-function jsy_plugin() {
-  const jsy_preset = [ 'jsy/lean', { no_stage_3: true, modules: false } ]
-  return rpi_babel({
-    exclude: 'node_modules/**',
-    presets: [ jsy_preset ],
-    plugins: [],
-    babelrc: false }) }
+    external, plugins }

@@ -1,9 +1,11 @@
 require('source-map-support').install()
 import HashRing from 'hashring'
-import FabricHub from 'msg-fabric-core/node'
+import FabricHub from 'msg-fabric-core'
+import tcp_plugin from 'msg-fabric-core/cjs/plugin-tcp'
 import swim_plugin from '../dist/swim_discovery'
 
 const Hub = FabricHub.plugin @
+  tcp_plugin()
   swim_plugin()
 
 
@@ -11,33 +13,34 @@ async function main_swim_core(swim_port, meta) ::
   const hub = new Hub()
 
   const svr = hub.tcp.createServer()
-  return new Promise @ (resolve, reject) => ::
-    svr.once @ 'error', reject
-    svr.listen @ 8080, '127.0.0.1', function () ::
-      const swimDisco = hub.createSWIM @:
-        meta, swim_port, channel: svr
+  svr.listen @ 8080, '127.0.0.1'
 
-      swimDisco.bootstrap() // this core is the bootstrap!
+  const ip_svr = await svr.conn_info(true)
+  const swimDisco = hub.createSWIM @:
+    meta, url: ip_svr.asURL()
+    host: `${ip_svr.address}:${swim_port}`
 
-      resolve @: swim_hosts: @# swimDisco.localhost()
+  swimDisco.bootstrap() // this core is the bootstrap!
+
+  return @{} swim_hosts: @# swimDisco.localhost()
 
 
 async function main_swim_service(swim_port, ctx, meta) ::
   const hub = new Hub()
-  hub.router.registerTarget @ 0, (msg, router) => ::
-    const body = msg.body_json()
-    console.log @ `SVC "${meta.topics[0]}" message:`, body
+  hub.local.registerTarget @ 'zero', (pkt, pktctx) => ::
+    console.log @ `SVC "${meta.topics[0]}" message:`, pkt.json()
 
   const svr = hub.tcp.createServer()
-  return new Promise @ (resolve, reject) => ::
-    svr.once @ 'error', reject
-    svr.listen @ 0, '127.0.0.1', function () ::
-      const swimDisco = hub.createSWIM @:
-        meta, swim_port, channel: svr
+  svr.listen @ 0, '127.0.0.1'
 
-      swimDisco.bootstrap @ ctx.swim_hosts
+  const ip = await svr.conn_info(true)
+  const swimDisco = hub.createSWIM @:
+    meta, url: ip.asURL()
+    host: `${ip.address}:${swim_port}`
 
-      resolve @: hub, swimDisco
+  swimDisco.bootstrap @ ctx.swim_hosts
+  return @{} hub, swimDisco
+
 
 function subscribeFiltered(swimDisco, filter, callback) ::
   ::
@@ -62,8 +65,8 @@ function main_demo({hub, swimDisco}) ::
 
     updates => ::
       for const entry of updates ::
-        const {id_router, channel} = entry
-        const addr = `${channel}/${id_router}`
+        const {id_route, url} = entry
+        const addr = `${url}/${id_route}`
         if 'dead' === entry.swim_status ::
           myTopicById.delete @ addr
           myTopicDHT.remove @ addr
@@ -71,7 +74,6 @@ function main_demo({hub, swimDisco}) ::
           myTopicById.set @ addr, entry
           myTopicDHT.add @ addr
 
-  const channel = hub.connect_self()
   setInterval @ pingOneAtRandom, 1000
 
   function pingOneAtRandom() ::
@@ -82,9 +84,10 @@ function main_demo({hub, swimDisco}) ::
     const entry = myTopicById.get(addr)
     //console.log @ `sending message[${idx}] to "${addr}":`, entry.topics
 
-    channel.sendJSON @:
-      id_router: entry.id_router
-      body: @: addr, idx
+    hub.send @:
+      id_route: entry.id_route
+      id_target: 'zero'
+      body: @{} addr, idx
 
 if module === require.main ::
   let _last_port = 2770
