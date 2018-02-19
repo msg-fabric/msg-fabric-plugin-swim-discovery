@@ -1,6 +1,6 @@
 {
   "name": "msg-fabric-plugin-swim-discovery",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "SWIM Discovery for msg-fabric",
   "license": "BSD-2-Clause",
   "author": "Shane Holloway <shane.holloway@ieee.org>",
@@ -27,8 +27,8 @@
   ],
   "files": [
     "dist/",
-    "code/",
-    "test/"
+    "cjs/",
+    "esm/"
   ],
   "main": "dist/index.js",
   "module": "esm/swim_discovery.js",
@@ -39,8 +39,8 @@
     "babel-cli": "^6.26.0",
     "babel-preset-jsy": "^0.10.1",
     "hashring": "^3.2.0",
-    "msg-fabric-core": "github:shanewholloway/msg-fabric-core",
-    "rollup": "^0.56.0",
+    "msg-fabric-core": "^0.5.0",
+    "rollup": "^0.56.2",
     "rollup-plugin-jsy-babel": "^1.0.1"
   },
   "babel": {
