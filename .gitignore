@@ -1,4 +1,6 @@
 copied_packages
+package-lock.json
+yarn.lock
 dist/
 esm/
 cjs/

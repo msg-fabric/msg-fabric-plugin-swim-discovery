@@ -1,12 +1,5 @@
-require('source-map-support').install()
 import HashRing from 'hashring'
-import FabricHub from 'msg-fabric-core'
-import tcp_plugin from 'msg-fabric-core/cjs/plugin-tcp'
-import swim_plugin from '../dist/swim_discovery'
-
-const Hub = FabricHub.plugin @
-  tcp_plugin()
-  swim_plugin()
+import Hub from './_setup.js'
 
 
 async function main_swim_core(swim_port, meta) ::
