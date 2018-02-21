@@ -1,6 +1,6 @@
 {
   "name": "msg-fabric-plugin-swim-discovery",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "SWIM Discovery for msg-fabric",
   "license": "BSD-2-Clause",
   "author": "Shane Holloway <shane.holloway@ieee.org>",
@@ -26,12 +26,11 @@
     "gossip"
   ],
   "files": [
-    "dist/",
     "cjs/",
     "esm/"
   ],
-  "main": "dist/index.js",
-  "module": "esm/swim_discovery.js",
+  "main": "cjs/index.js",
+  "module": "esm/index.js",
   "dependencies": {
     "swim": "^0.5.0"
   },
@@ -47,6 +46,7 @@
     "presets": "jsy/lean"
   },
   "scripts": {
+    "clean": "rm cjs/* esm/*",
     "build": "rollup --config",
     "watch": "npm -s run build -- --watch",
     "demo:swim": "babel-node test/swim.jsy",
