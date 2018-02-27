@@ -39,8 +39,8 @@
     "babel-preset-jsy": "^0.10.1",
     "hashring": "^3.2.0",
     "msg-fabric-core": "^0.5.2",
-    "rollup": "^0.56.2",
-    "rollup-plugin-jsy-babel": "^1.0.1"
+    "rollup": "^0.56.3",
+    "rollup-plugin-jsy-babel": "^2.0.0"
   },
   "babel": {
     "presets": "jsy/lean"

@@ -1,0 +1,103 @@
+import {createHash} from 'crypto'
+import Hub from './_setup.js'
+
+var _last = Buffer.from('initial state')
+function nextHashInChain() ::
+  _last = createHash('sha256').update(_last).digest()
+  return _last.toString('base64')
+
+async function main_swim_core(swim_port, meta) ::
+  const hub = new Hub()
+  hub.local.registerTarget @ 'zero', (pkt, pktctx) => ::
+    console.log @ 'CORE got message!', @# pkt, pkt.json(), meta
+
+  const svr = hub.tcp.createServer()
+  svr.listen @ 8080, '127.0.0.1'
+
+  const ip_svr = await svr.conn_info(true)
+  const swimDisco = logSWIMEvents @
+    hub.createSWIM @:
+      meta, url: ip_svr.asURL()
+      host: `${ip_svr.address}:${swim_port}`
+
+  swimDisco.bootstrap() // this core is the bootstrap!
+
+  return @{} swim_hosts: @# swimDisco.localhost()
+
+
+async function main_swim_service(swim_port, ctx, meta) ::
+  const hub = new Hub()
+  hub.local.registerTarget @ 'zero', (pkt, pktctx) => ::
+    console.log @ 'SVC got message!', @# pkt, pkt.json(), meta
+
+  const svr = hub.tcp.createServer()
+  svr.listen @ 0, '127.0.0.1'
+
+  const ip = await svr.conn_info(true)
+  const swimDisco = logSWIMEvents @
+    hub.createSWIM @:
+      meta, url: ip.asURL()
+      host: `${ip.address}:${swim_port}`
+
+  swimDisco.bootstrap @ ctx.swim_hosts
+  return @{} hub, swimDisco
+
+
+function main_demo({hub, swimDisco}) ::
+  //dumpTableEverySoOften(swimDisco)
+  swimDisco.registerRouterDiscovery()
+
+  setInterval @ pingOneAtRandom, 1000
+
+  function pingOneAtRandom() ::
+    const lst = Array.from @ swimDisco.byId.values()
+    const one = lst @[] 0 | @ Math.random() * lst.length
+
+    hub.send @:
+      id_route: one.id_route
+      id_target: 'zero'
+      body: @{} hello: 'yup'
+
+
+if module === require.main ::
+  let _last_port = 2770
+  const pickAPort = () => ++ _last_port
+
+  const core_meta = @{}
+    topics: @# 'core'
+    blah: Array(7).fill(null).map @ (_, i) => @:
+      [`neato-${i}-keen`]: nextHashInChain()
+
+  console.dir @ core_meta, @{} colors: true
+  console.log @ JSON.stringify(core_meta).length
+
+  main_swim_core @ 2700, core_meta
+  .then @ ctx => Promise.all @#
+    main_swim_service @ pickAPort(), ctx, @{}
+      topics: @# 'service_one', 'test'
+
+    main_swim_service @ pickAPort(), ctx, @{}
+      topics: @# 'service_two', 'test'
+
+    .then @ main_demo
+
+  .catch @ console.error
+
+
+
+function logSWIMEvents(swimDisco) ::
+  swimDisco.swim.on @ 'error', err => :: console.log @ 'swim error', err
+  swimDisco.swim.on @ 'ready', () => :: console.log @ 'swim ready'
+  return swimDisco
+
+function dumpTableEverySoOften(swimDisco) ::
+  setTimeout @ dumpTable, 1000
+  setInterval @ dumpTable, 15000
+
+  function dumpTable() ::
+    console.log @ '\nbyId table:'
+    console.dir @
+      Array.from @ swimDisco.byId.values()
+      @: colors: true
+    console.log @ '\n'
+
