@@ -1,5 +1,7 @@
 # msg-fabric-plugin-swim-discovery
 
+(DEPRECATED)
+
 **SWIM: Scalable Weakly-consistent Infection-style Process Group Membership Protocol**
 
 SWIM peer-to-peer discovery for [msg-fabric](https://www.npmjs.com/package/msg-fabric).
